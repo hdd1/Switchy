@@ -17,7 +17,7 @@ public struct TypingBuffer: Sendable {
     public static let maxLength = 500
 
     public enum Outcome: Equatable, Sendable {
-        case appended, removed, reset
+        case appended, reset
     }
 
     public private(set) var strokes: [KeyStroke] = []
@@ -34,12 +34,9 @@ public struct TypingBuffer: Sendable {
             reset()
             return .reset
         }
-        if keyCode == Self.backspaceKeyCode {
-            if !strokes.isEmpty { strokes.removeLast() }
-            return .removed
-        }
         guard KeyboardLayout.printableKeyCodes.contains(keyCode) else {
-            // Enter, Tab, Esc, стрелки, F-клавиши, Home/End… — курсор ушёл или ввод завершён.
+            // Enter, Tab, Esc, Backspace, Delete, стрелки, F-клавиши, Home/End… — граница фрагмента:
+            // курсор ушёл, ввод завершён или пользователь начал править текст.
             reset()
             return .reset
         }

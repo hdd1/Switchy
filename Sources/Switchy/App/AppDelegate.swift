@@ -6,9 +6,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var hotkeys: HotkeyController?
     private var windowLayouts: WindowLayoutController?
     private var permissionTimer: Timer?
+    private let settingsWindow = SettingsWindowController()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         statusBar = StatusBarController()
+        statusBar?.onOpenSettings = { [weak self] in self?.settingsWindow.show() }
 
         if Permissions.allGranted {
             permissionsGranted()
@@ -18,6 +20,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             startPermissionPolling()
         }
         statusBar?.refresh()
+    }
+
+    /// Повторный запуск уже работающего Switchy (двойной клик в Finder) — открываем настройки.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        settingsWindow.show()
+        return true
     }
 
     /// Пока прав нет — раз в 2 секунды проверяем, не выдал ли их пользователь.

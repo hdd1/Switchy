@@ -5,25 +5,17 @@ import SwitchyCore
 @MainActor
 final class HotkeyController {
     private let tap = EventTap()
-    private var engine: HotkeyEngine
+    private var engine = HotkeyEngine()
+    private let store = SettingsStore.shared
     let typing = TypingController()
 
-    /// Пока нет окна настроек (этап 6) — привязки по умолчанию.
-    static let defaultBindings: [Hotkey: HotkeyAction] = [
-        .modifierTap(.leftOption): .convert,
-        .key(keyCode: 105, modifiers: []): .selectLayout(id: "com.apple.keylayout.ABC"),          // F13
-        .key(keyCode: 107, modifiers: []): .selectLayout(id: "com.apple.keylayout.RussianWin"),   // F14
-        .key(keyCode: 113, modifiers: []): .selectLayout(id: "com.apple.keylayout.Ukrainian-PC"), // F15
-        // Временно, пока нет дополнительной клавиатуры с F13–F15: ⌃⌥1 / ⌃⌥2 / ⌃⌥3.
-        .key(keyCode: 18, modifiers: [.control, .option]): .selectLayout(id: "com.apple.keylayout.ABC"),
-        .key(keyCode: 19, modifiers: [.control, .option]): .selectLayout(id: "com.apple.keylayout.RussianWin"),
-        .key(keyCode: 20, modifiers: [.control, .option]): .selectLayout(id: "com.apple.keylayout.Ukrainian-PC"),
-    ]
-
-    init(bindings: [Hotkey: HotkeyAction] = HotkeyController.defaultBindings) {
-        engine = HotkeyEngine(bindings: bindings)
+    init() {
         tap.handler = { [weak self] type, event in
             self?.handle(type: type, event: event) ?? false
+        }
+        store.observe { [weak self] settings in
+            // История буфера обмена (этап 7) пока не подключена.
+            self?.engine.bindings = settings.hotkeyBindings(includeClipboard: false)
         }
     }
 
@@ -31,6 +23,9 @@ final class HotkeyController {
     func start() -> Bool { tap.start() }
 
     private func handle(type: CGEventType, event: CGEvent) -> Bool {
+        // Во время записи хоткея в настройках ничего не перехватываем.
+        if store.isRecordingHotkey { return false }
+
         guard let keyEvent = KeyEvent(cgType: type, event: event) else { return false }
         let result = engine.process(keyEvent, at: ProcessInfo.processInfo.systemUptime)
 
@@ -60,7 +55,7 @@ final class HotkeyController {
             typing.convert()
         case .clipboardHistory:
             // Этап 7: панель истории буфера обмена.
-            NSLog("Switchy: хоткей истории буфера")
+            break
         }
     }
 }

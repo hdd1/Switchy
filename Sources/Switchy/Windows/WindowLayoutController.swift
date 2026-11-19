@@ -2,17 +2,10 @@ import AppKit
 import Carbon
 import SwitchyCore
 
-/// Настройки памяти окон (на этапе 6 переедут в окно настроек).
-struct WindowMemorySettings {
-    var enabled = true
-    var newWindowPolicy: NewWindowPolicy = .keepCurrent
-    var fixedLayout: String? = "com.apple.keylayout.ABC"
-}
-
 /// Память раскладки по окнам: запоминаем при любой смене раскладки, восстанавливаем при фокусе окна.
 @MainActor
 final class WindowLayoutController {
-    var settings = WindowMemorySettings()
+    private var settings: AppSettings { SettingsStore.shared.settings }
 
     private let tracker = FocusTracker()
     private var memory = WindowLayoutMemory()
@@ -42,12 +35,13 @@ final class WindowLayoutController {
     }
 
     private func focusChanged(to key: WindowKey) {
-        guard settings.enabled, let current = InputSources.current()?.id else { return }
+        guard settings.windowMemoryEnabled, let current = InputSources.current()?.id else { return }
         ignoreChangesUntil = ProcessInfo.processInfo.systemUptime + Self.settleInterval
 
         if let target = memory.layoutToRestore(
             for: key, current: current,
-            policy: settings.newWindowPolicy, fixedLayout: settings.fixedLayout
+            policy: settings.newWindowPolicy,
+            fixedLayout: settings.newWindowLayout ?? SettingsStore.shared.cycle.first
         ) {
             InputSources.select(id: target)
         }
@@ -66,7 +60,7 @@ final class WindowLayoutController {
     }
 
     private func inputSourceChanged() {
-        guard settings.enabled,
+        guard settings.windowMemoryEnabled,
               ProcessInfo.processInfo.systemUptime >= ignoreChangesUntil,
               let key = tracker.currentKey,
               let current = InputSources.current()?.id

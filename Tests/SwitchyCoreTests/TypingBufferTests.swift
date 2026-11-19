@@ -8,12 +8,14 @@ struct TypingBufferTests {
         for c in codes { buffer.handleKeyDown(keyCode: c, modifiers: shift ? .shift : [], capsLock: false) }
     }
 
-    @Test func appendAndBackspace() {
+    @Test func backspaceIsBoundary() {
         var b = TypingBuffer()
         type(&b, [5, 4, 11])
         #expect(b.strokes.count == 3)
-        b.handleKeyDown(keyCode: TypingBuffer.backspaceKeyCode, modifiers: [], capsLock: false)
-        #expect(b.strokes.map(\.keyCode) == [5, 4])
+        #expect(b.handleKeyDown(keyCode: TypingBuffer.backspaceKeyCode, modifiers: [], capsLock: false) == .reset)
+        #expect(b.isEmpty)
+        type(&b, [2, 17])
+        #expect(b.strokes.map(\.keyCode) == [2, 17])
     }
 
     @Test func navigationAndCommandsReset() {

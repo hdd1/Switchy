@@ -7,6 +7,8 @@ import SwitchyCore
 final class StatusBarController: NSObject, NSMenuDelegate {
     private let item: NSStatusItem
     private let menu = NSMenu()
+    /// Открыть окно настроек.
+    var onOpenSettings: (() -> Void)?
 
     override init() {
         item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -84,6 +86,9 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         }
 
         menu.addItem(.separator())
+        let settings = NSMenuItem(title: "Настройки…", action: #selector(openSettings), keyEquivalent: ",")
+        settings.target = self
+        menu.addItem(settings)
         let quit = NSMenuItem(title: "Выход", action: #selector(quit), keyEquivalent: "q")
         quit.target = self
         menu.addItem(quit)
@@ -106,6 +111,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     @objc private func openAccessibility() { Permissions.openAccessibilitySettings() }
     @objc private func openInputMonitoring() { Permissions.openInputMonitoringSettings() }
     @objc private func quit() { NSApp.terminate(nil) }
+    @objc private func openSettings() { onOpenSettings?() }
     @objc private func openKeyboardSettings() {
         if let url = URL(string: "x-apple.systempreferences:com.apple.Keyboard-Settings.extension") {
             NSWorkspace.shared.open(url)

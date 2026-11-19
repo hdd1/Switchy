@@ -2,18 +2,10 @@ import AppKit
 import Carbon
 import SwitchyCore
 
-/// Настройки перевода (на этапе 6 переедут в окно настроек).
-struct ConversionSettings {
-    var smartMode = true
-    var fragmentMode: FragmentMode = .all
-    /// Прямые хоткеи раскладок заодно переводят набранное.
-    var directHotkeysConvert = true
-}
-
 /// Перевод текста: набранного (буфер набора) и выделенного, серия нажатий, прямые хоткеи раскладок.
 @MainActor
 final class TypingController {
-    var settings = ConversionSettings()
+    private var settings: AppSettings { SettingsStore.shared.settings }
 
     private var buffer = TypingBuffer()
     private var session: Session?
@@ -64,12 +56,10 @@ final class TypingController {
     /// Нажатие клавиши, прошедшее мимо хоткеев (дошедшее до приложения).
     func keyDown(keyCode: UInt16, modifiers: Modifiers, capsLock: Bool) {
         if session != nil {
-            session = nil
             // Пользователь продолжил печатать после перевода — переведённое считаем принятым
-            // и начинаем фрагмент заново. Backspace оставляет буфер (правка переведённого).
-            if keyCode != TypingBuffer.backspaceKeyCode {
-                buffer.reset()
-            }
+            // и начинаем фрагмент заново.
+            session = nil
+            buffer.reset()
         }
         buffer.handleKeyDown(keyCode: keyCode, modifiers: modifiers, capsLock: capsLock)
     }
@@ -247,9 +237,9 @@ final class TypingController {
         return detector.pick(candidates)
     }
 
-    /// Порядок круга: пока — включённые раскладки в системном порядке (этап 6 — из настроек).
+    /// Порядок круга из настроек (только включённые в системе раскладки).
     private func cycleIDs() -> [String] {
-        InputSources.enabled().map(\.id)
+        SettingsStore.shared.cycle
     }
 
     private func layout(_ id: String) -> KeyboardLayout? {
