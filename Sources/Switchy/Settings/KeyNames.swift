@@ -40,9 +40,9 @@ enum KeyNames {
     static func describe(_ hotkey: Hotkey) -> String {
         switch hotkey {
         case let .modifierTap(key):
-            return "Тап: \(key.displayName)"
+            return String(localized: "Tap: \(key.displayName)")
         case let .modifierDoubleTap(key):
-            return "Двойной тап: \(key.displayName)"
+            return String(localized: "Double tap: \(key.displayName)")
         case let .key(keyCode, modifiers):
             return modifiers.symbols + name(keyCode: keyCode)
         }
@@ -52,13 +52,13 @@ enum KeyNames {
     static func systemConflict(_ hotkey: Hotkey) -> String? {
         switch hotkey {
         case .key(keyCode: 49, modifiers: [.control]):
-            return "⌃Space — системное переключение раскладки"
+            return String(localized: "⌃Space is the system input source shortcut")
         case .key(keyCode: 49, modifiers: [.control, .option]):
-            return "⌃⌥Space — системное «следующий источник ввода»"
+            return String(localized: "⌃⌥Space is the system “next input source” shortcut")
         case .key(keyCode: 49, modifiers: [.command]):
-            return "⌘Space — Spotlight"
+            return String(localized: "⌘Space is Spotlight")
         case .key(keyCode: 9, modifiers: [.command, .shift]):
-            return "⇧⌘V занят в некоторых программах: «вставить без форматирования», в JetBrains — «Paste from History». Switchy его перехватит."
+            return String(localized: "⇧⌘V is used by some apps: “Paste and Match Style”, JetBrains “Paste from History”. Switchy will take it over.")
         default:
             return nil
         }
@@ -74,4 +74,9 @@ extension Modifiers {
         if flags.contains(.shift) { m.insert(.shift) }
         self = m
     }
+}
+
+extension InputSource {
+    /// Подпись раскладки в списках: «RU  Russian – PC» (не переводится).
+    var menuLabel: String { "\(shortCode)  \(name)" }
 }

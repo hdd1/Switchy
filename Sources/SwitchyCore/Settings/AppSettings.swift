@@ -44,6 +44,12 @@ public struct AppSettings: Codable, Equatable, Sendable {
     /// Хранить историю на диске (переживает перезапуск).
     public var clipboardPersist = true
 
+    // Исключения (bundle id приложений)
+    /// Где не переводить текст (прямые хоткеи там только переключают раскладку).
+    public var excludedConversionApps: [String] = []
+    /// Откуда не сохранять скопированное в историю.
+    public var excludedClipboardApps: [String] = []
+
     public init() {}
 
     /// Настройки по умолчанию для данного набора раскладок: ⌃⌥1, ⌃⌥2, … по порядку.
@@ -114,6 +120,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         case cycleOrder, cycleExcluded, layoutBindings, directHotkeysConvert
         case windowMemoryEnabled, newWindowPolicy, newWindowLayout
         case clipboardEnabled, clipboardHotkey, clipboardCapacity, clipboardPersist
+        case excludedConversionApps, excludedClipboardApps
     }
 
     public init(from decoder: Decoder) throws {
@@ -135,6 +142,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
         clipboardHotkey = c.contains(.clipboardHotkey) ? try c.decodeIfPresent(Hotkey.self, forKey: .clipboardHotkey) : d.clipboardHotkey
         clipboardCapacity = try c.decodeIfPresent(Int.self, forKey: .clipboardCapacity) ?? d.clipboardCapacity
         clipboardPersist = try c.decodeIfPresent(Bool.self, forKey: .clipboardPersist) ?? d.clipboardPersist
+        excludedConversionApps = try c.decodeIfPresent([String].self, forKey: .excludedConversionApps) ?? d.excludedConversionApps
+        excludedClipboardApps = try c.decodeIfPresent([String].self, forKey: .excludedClipboardApps) ?? d.excludedClipboardApps
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -154,5 +163,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         try c.encode(clipboardHotkey, forKey: .clipboardHotkey)
         try c.encode(clipboardCapacity, forKey: .clipboardCapacity)
         try c.encode(clipboardPersist, forKey: .clipboardPersist)
+        try c.encode(excludedConversionApps, forKey: .excludedConversionApps)
+        try c.encode(excludedClipboardApps, forKey: .excludedClipboardApps)
     }
 }

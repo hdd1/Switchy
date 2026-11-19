@@ -69,14 +69,14 @@ public enum ModifierKey: String, Codable, Hashable, Sendable, CaseIterable {
 
     public var displayName: String {
         switch self {
-        case .leftOption: "левый ⌥"
-        case .rightOption: "правый ⌥"
-        case .leftCommand: "левый ⌘"
-        case .rightCommand: "правый ⌘"
-        case .leftShift: "левый ⇧"
-        case .rightShift: "правый ⇧"
-        case .leftControl: "левый ⌃"
-        case .rightControl: "правый ⌃"
+        case .leftOption: String(localized: "left ⌥")
+        case .rightOption: String(localized: "right ⌥")
+        case .leftCommand: String(localized: "left ⌘")
+        case .rightCommand: String(localized: "right ⌘")
+        case .leftShift: String(localized: "left ⇧")
+        case .rightShift: String(localized: "right ⇧")
+        case .leftControl: String(localized: "left ⌃")
+        case .rightControl: String(localized: "right ⌃")
         }
     }
 }

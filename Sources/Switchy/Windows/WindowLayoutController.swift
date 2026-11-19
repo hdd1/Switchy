@@ -35,7 +35,8 @@ final class WindowLayoutController {
     }
 
     private func focusChanged(to key: WindowKey) {
-        guard settings.windowMemoryEnabled, let current = InputSources.current()?.id else { return }
+        guard settings.windowMemoryEnabled, !SettingsStore.shared.isPaused,
+              let current = InputSources.current()?.id else { return }
         ignoreChangesUntil = ProcessInfo.processInfo.systemUptime + Self.settleInterval
 
         if let target = memory.layoutToRestore(
@@ -60,7 +61,7 @@ final class WindowLayoutController {
     }
 
     private func inputSourceChanged() {
-        guard settings.windowMemoryEnabled,
+        guard settings.windowMemoryEnabled, !SettingsStore.shared.isPaused,
               ProcessInfo.processInfo.systemUptime >= ignoreChangesUntil,
               let key = tracker.currentKey,
               let current = InputSources.current()?.id

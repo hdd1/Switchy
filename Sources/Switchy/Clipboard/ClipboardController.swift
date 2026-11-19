@@ -10,6 +10,9 @@ final class ClipboardController {
 
     func start() {
         monitor.onText = { [weak self] text, source in
+            let settings = SettingsStore.shared
+            if settings.isPaused { return }
+            if let source, settings.settings.excludedClipboardApps.contains(source) { return }
             self?.store.add(text, source: source)
         }
         SettingsStore.shared.observe { [weak self] settings in
@@ -25,7 +28,7 @@ final class ClipboardController {
     }
 
     func togglePanel() {
-        guard SettingsStore.shared.settings.clipboardEnabled else { return }
+        guard SettingsStore.shared.settings.clipboardEnabled, !SettingsStore.shared.isPaused else { return }
         panel.toggle()
     }
 }

@@ -1,0 +1,98 @@
+# Таблица переводов Switchy: английский ключ <TAB> русский <TAB> украинский.
+# Из неё scripts/l10n/generate.py собирает Support/Localization/*.lproj/Localizable.strings.
+# %@ — строка, %lld — число (подстановки из кода).
+Conversion	Перевод	Переклад
+Layouts	Раскладки	Розкладки
+Windows	Окна	Вікна
+Clipboard	Буфер обмена	Буфер обміну
+Exclusions	Исключения	Винятки
+General	Основные	Загальні
+This hotkey is already assigned to another Switchy action.	Этот хоткей уже назначен на другое действие Switchy.	Цю гарячу клавішу вже призначено на іншу дію Switchy.
+Conversion hotkey	Хоткей перевода	Гаряча клавіша перекладу
+Converts the text you've just typed, or the selected text if nothing was typed.	Переводит только что набранный текст, а если ничего не набрано — выделенный.	Перекладає щойно набраний текст, а якщо нічого не набрано — виділений.
+Mode	Режим	Режим
+Smart	Умный	Розумний
+Simple cycle	Просто по кругу	Просто по колу
+The first press picks the most likely layout (macOS spell checking and language recognition, offline). Further presses cycle through the layouts, the original one last.	Первое нажатие само выбирает самую вероятную раскладку (проверка орфографии и распознавание языка macOS, без сети). Следующие нажатия — по кругу, исходная раскладка последней.	Перше натискання саме обирає найімовірнішу розкладку (перевірка правопису та розпізнавання мови macOS, без мережі). Наступні натискання — по колу, початкова розкладка остання.
+Each press switches to the next layout in the cycle, the original one last.	Каждое нажатие — следующая раскладка по кругу, исходная последней.	Кожне натискання — наступна розкладка по колу, початкова остання.
+What to convert	Что переводить из набранного	Що перекладати з набраного
+Everything since the last click, Enter, ⌫, arrow key or layout switch	Всё с последнего клика, Enter, ⌫, стрелок, смены раскладки	Усе від останнього кліку, Enter, ⌫, стрілок, зміни розкладки
+Last word	Последнее слово	Останнє слово
+Cycle order	Порядок перевода по кругу	Порядок перекладу по колу
+Drag to reorder. Unchecked layouts are skipped when cycling (their direct hotkey still works).	Перетащите, чтобы изменить порядок. Снятая галочка — раскладка не участвует в переводе по кругу (прямой хоткей для неё работает).	Перетягніть, щоб змінити порядок. Знята позначка — розкладка не бере участі в перекладі по колу (пряма гаряча клавіша для неї працює).
+Also convert just-typed text into this layout	Заодно переводить только что набранное в эту раскладку	Заодно перекладати щойно набране в цю розкладку
+Direct layout hotkeys	Прямые хоткеи раскладок	Прямі гарячі клавіші розкладок
+Each layout has a primary and a secondary hotkey (e.g. ⌃⌥2 and F14).	У каждой раскладки — основной и дополнительный хоткей (например, ⌃⌥2 и F14).	Кожна розкладка має основну й додаткову гарячу клавішу (наприклад, ⌃⌥2 і F14).
+Remember the layout for each window	Помнить раскладку для каждого окна	Пам'ятати розкладку для кожного вікна
+When you switch to a window, the layout last used in it is restored — including switches made by Switchy.	При переходе в окно включается раскладка, которая была в нём последней — в том числе после переключений Switchy.	Під час переходу у вікно вмикається розкладка, яка була в ньому останньою — зокрема після перемикань Switchy.
+New window	Новое окно	Нове вікно
+Layout in a new window	Раскладка в новом окне	Розкладка в новому вікні
+Keep current	Оставлять текущую	Залишати поточну
+Always switch to…	Всегда включать…	Завжди вмикати…
+Layout	Раскладка	Розкладка
+The system option “Automatically switch to a document’s input source” is on. It conflicts with Switchy — the layout may flicker when switching windows.	Включена системная опция «Автоматически переключаться на источник ввода документа». Она спорит со Switchy — раскладка может мигать при переходе между окнами.	Увімкнено системну опцію «Автоматично перемикатися на джерело введення документа». Вона конфліктує зі Switchy — розкладка може блимати під час переходу між вікнами.
+System Settings → Keyboard → Input Sources → Edit… → turn it off.	Системные настройки → Клавиатура → Источники ввода → Изменить… → снимите галочку.	Системні параметри → Клавіатура → Джерела введення → Змінити… → зніміть позначку.
+Open Keyboard Settings	Открыть настройки клавиатуры	Відкрити параметри клавіатури
+Keep clipboard history	Вести историю буфера обмена	Вести історію буфера обміну
+Text only. Passwords and other content marked as sensitive (1Password, Bitwarden, Keychain…) are never saved.	Только текст. Пароли и другое содержимое, помеченное как секретное (1Password, Bitwarden, Keychain…), не сохраняется.	Лише текст. Паролі та інший вміст, позначений як секретний (1Password, Bitwarden, Keychain…), не зберігається.
+History panel	Панель истории	Панель історії
+Items to keep	Хранить элементов	Зберігати елементів
+Remember after restart	Помнить после перезапуска	Пам'ятати після перезапуску
+History is stored on disk in ~/Library/Application Support/Switchy (accessible only to you).	История хранится на диске в ~/Library/Application Support/Switchy (доступ только у вас).	Історія зберігається на диску в ~/Library/Application Support/Switchy (доступ лише у вас).
+History is kept in memory only and is lost when Switchy quits.	История хранится только в памяти и пропадает при выходе из Switchy.	Історія зберігається лише в пам'яті й зникає після виходу зі Switchy.
+In history: %lld	В истории: %lld	В історії: %lld
+Clear History…	Очистить историю…	Очистити історію…
+Clear the entire clipboard history?	Очистить всю историю буфера обмена?	Очистити всю історію буфера обміну?
+Clear	Очистить	Очистити
+Don't convert text	Не переводить текст	Не перекладати текст
+The conversion hotkey is disabled and typing isn't tracked there. Direct layout hotkeys only switch the layout. Useful for terminals, games, remote desktop.	Хоткей перевода там не работает, набранное не отслеживается. Прямые хоткеи раскладок только переключают раскладку. Полезно для терминала, игр, удалённого рабочего стола.	Гаряча клавіша перекладу там не працює, набране не відстежується. Прямі гарячі клавіші розкладок лише перемикають розкладку. Корисно для термінала, ігор, віддаленого робочого столу.
+Don't save clipboard	Не сохранять буфер обмена	Не зберігати буфер обміну
+Text copied in these apps is not added to history (e.g. a banking app or a password manager that doesn't mark its data as sensitive).	Скопированное в этих приложениях не попадает в историю (например, банк-клиент или менеджер паролей, который не помечает свои данные как секретные).	Скопійоване в цих застосунках не потрапляє в історію (наприклад, банк-клієнт або менеджер паролів, що не позначає свої дані як секретні).
+Launch Switchy at login	Запускать Switchy при входе в систему	Запускати Switchy під час входу в систему
+Permissions	Права доступа	Дозволи
+Accessibility	Универсальный доступ	Універсальний доступ
+Input Monitoring	Мониторинг ввода	Моніторинг введення
+Version	Версия	Версія
+Granted	Выдано	Надано
+Open Settings…	Открыть настройки…	Відкрити параметри…
+Language	Язык	Мова
+System	Системный	Системна
+Restart Switchy to apply the new language.	Чтобы применить язык, перезапустите Switchy.	Щоб застосувати мову, перезапустіть Switchy.
+Restart Now	Перезапустить	Перезапустити
+Later	Позже	Пізніше
+✅ %@	✅ %@	✅ %@
+⚠️ %@ — open settings…	⚠️ %@ — открыть настройки…	⚠️ %@ — відкрити параметри…
+⚠️ Turn off the system “document input source” option…	⚠️ Выключите системную «память раскладки документа»…	⚠️ Вимкніть системну «пам'ять розкладки документа»…
+Keyboard → Input Sources → Edit… → “Automatically switch to a document’s input source”. Switchy remembers window layouts itself.	Клавиатура → Источники ввода → Изменить… → «Автоматически переключаться на источник ввода документа». Switchy запоминает раскладку окон сам.	Клавіатура → Джерела введення → Змінити… → «Автоматично перемикатися на джерело введення документа». Switchy запам'ятовує розкладку вікон сам.
+Pause	Пауза	Пауза
+Settings…	Настройки…	Параметри…
+Quit	Выход	Вийти
+Switchy: permissions required	Switchy: нужны права доступа	Switchy: потрібні дозволи
+Switchy is paused	Switchy на паузе	Switchy на паузі
+Press a shortcut or tap a modifier…	Нажмите сочетание или тапните модификатор…	Натисніть сполучення або тапніть модифікатор…
+Tap: %@… (again — double tap)	Тап: %@… (ещё раз — двойной тап)	Тап: %@… (ще раз — подвійний тап)
+Not set	Не задан	Не задано
+Pick F13–F20 without pressing	Выбрать F13–F20 без нажатия	Вибрати F13–F20 без натискання
+Remove hotkey	Убрать хоткей	Прибрати гарячу клавішу
+Tap: %@	Тап: %@	Тап: %@
+Double tap: %@	Двойной тап: %@	Подвійний тап: %@
+⌃Space is the system input source shortcut	⌃Space — системное переключение раскладки	⌃Space — системне перемикання розкладки
+⌃⌥Space is the system “next input source” shortcut	⌃⌥Space — системное «следующий источник ввода»	⌃⌥Space — системне «наступне джерело введення»
+⌘Space is Spotlight	⌘Space — Spotlight	⌘Space — Spotlight
+⇧⌘V is used by some apps: “Paste and Match Style”, JetBrains “Paste from History”. Switchy will take it over.	⇧⌘V занят в некоторых программах: «вставить без форматирования», в JetBrains — «Paste from History». Switchy его перехватит.	⇧⌘V зайнято в деяких програмах: «вставити без форматування», у JetBrains — «Paste from History». Switchy його перехопить.
+left ⌥	левый ⌥	лівий ⌥
+right ⌥	правый ⌥	правий ⌥
+left ⌘	левый ⌘	лівий ⌘
+right ⌘	правый ⌘	правий ⌘
+left ⇧	левый ⇧	лівий ⇧
+right ⇧	правый ⇧	правий ⇧
+left ⌃	левый ⌃	лівий ⌃
+right ⌃	правый ⌃	правий ⌃
+No apps	Нет приложений	Немає застосунків
+Choose in Applications folder…	Выбрать в папке Программы…	Вибрати в теці Програми…
+Search clipboard history	Поиск в истории буфера	Пошук в історії буфера
+History is empty — copy something	История пуста — скопируйте что-нибудь	Історія порожня — скопіюйте щось
+Nothing found	Ничего не найдено	Нічого не знайдено
+↩ paste · 1–9 quick pick · ⌘⌫ delete · esc close	↩ вставить · 1–9 быстрый выбор · ⌘⌫ удалить · esc закрыть	↩ вставити · 1–9 швидкий вибір · ⌘⌫ видалити · esc закрити
++ %lld more lines	+ ещё %lld стр.	+ ще %lld рядк.
+Switchy Settings	Switchy — Настройки	Switchy — Параметри

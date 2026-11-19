@@ -55,6 +55,10 @@ final class TypingController {
 
     /// Нажатие клавиши, прошедшее мимо хоткеев (дошедшее до приложения).
     func keyDown(keyCode: UInt16, modifiers: Modifiers, capsLock: Bool) {
+        if SettingsStore.shared.frontmostAppExcludedFromConversion {
+            reset()
+            return
+        }
         if session != nil {
             // Пользователь продолжил печатать после перевода — переведённое считаем принятым
             // и начинаем фрагмент заново.
@@ -84,6 +88,7 @@ final class TypingController {
     /// Хоткей перевода: первое нажатие — умный выбор (или следующая по кругу), дальше — по кругу.
     /// Есть набранное — переводим его; нет — переводим выделение.
     func convert() {
+        guard !SettingsStore.shared.frontmostAppExcludedFromConversion else { return }
         if var current = session {
             let from = current.current
             current.index = (current.index + 1) % current.sequence.count
@@ -111,6 +116,11 @@ final class TypingController {
     /// Выделение прямые хоткеи не трогают (кроме продолжения уже начатой серии).
     func selectLayout(id target: String) {
         guard let currentID = InputSources.current()?.id, currentID != target else { return }
+        if SettingsStore.shared.frontmostAppExcludedFromConversion {
+            reset()
+            switchLayout(to: target)
+            return
+        }
 
         let content: Session.Content
         if let session {

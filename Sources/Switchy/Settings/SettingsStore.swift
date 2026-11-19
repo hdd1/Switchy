@@ -20,6 +20,15 @@ final class SettingsStore: ObservableObject {
     /// Идёт запись хоткея в окне настроек — движок хоткеев на это время молчит.
     @Published var isRecordingHotkey = false
 
+    /// Пауза: Switchy временно ничего не делает (не сохраняется между запусками).
+    @Published var isPaused = false
+
+    /// Активное приложение в списке исключений перевода.
+    var frontmostAppExcludedFromConversion: Bool {
+        guard let id = NSWorkspace.shared.frontmostApplication?.bundleIdentifier else { return false }
+        return settings.excludedConversionApps.contains(id)
+    }
+
     private var observers: [(AppSettings) -> Void] = []
 
     private init() {

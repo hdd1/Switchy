@@ -8,15 +8,17 @@ struct SettingsView: View {
     var body: some View {
         TabView {
             ConversionTab(store: store)
-                .tabItem { Label("Перевод", systemImage: "character.cursor.ibeam") }
+                .tabItem { Label("Conversion", systemImage: "character.cursor.ibeam") }
             LayoutsTab(store: store)
-                .tabItem { Label("Раскладки", systemImage: "keyboard") }
+                .tabItem { Label("Layouts", systemImage: "keyboard") }
             WindowsTab(store: store)
-                .tabItem { Label("Окна", systemImage: "macwindow.on.rectangle") }
+                .tabItem { Label("Windows", systemImage: "macwindow.on.rectangle") }
             ClipboardTab(store: store)
-                .tabItem { Label("Буфер обмена", systemImage: "doc.on.clipboard") }
+                .tabItem { Label("Clipboard", systemImage: "doc.on.clipboard") }
+            ExclusionsTab(store: store)
+                .tabItem { Label("Exclusions", systemImage: "nosign") }
             GeneralTab()
-                .tabItem { Label("Основные", systemImage: "gearshape") }
+                .tabItem { Label("General", systemImage: "gearshape") }
         }
         // Формы прокручиваются и не имеют собственной высоты — размер задаём явно.
         .frame(width: 600, height: 600)
@@ -29,7 +31,7 @@ struct SettingsView: View {
 private func warning(for hotkey: Hotkey?, in settings: AppSettings) -> String? {
     guard let hotkey else { return nil }
     if settings.duplicateHotkeys().contains(hotkey) {
-        return "Этот хоткей уже назначен на другое действие Switchy."
+        return String(localized: "This hotkey is already assigned to another Switchy action.")
     }
     return KeyNames.systemConflict(hotkey)
 }
@@ -42,31 +44,31 @@ private struct ConversionTab: View {
     var body: some View {
         Form {
             Section {
-                LabeledContent("Хоткей перевода") {
+                LabeledContent("Conversion hotkey") {
                     HotkeyField(hotkey: $store.settings.convertHotkey,
                                 warning: warning(for: store.settings.convertHotkey, in: store.settings))
                 }
-                Text("Переводит только что набранный текст, а если ничего не набрано — выделенный.")
+                Text("Converts the text you've just typed, or the selected text if nothing was typed.")
                     .font(.caption).foregroundStyle(.secondary)
             }
 
             Section {
-                Picker("Режим", selection: $store.settings.smartMode) {
-                    Text("Умный").tag(true)
-                    Text("Просто по кругу").tag(false)
+                Picker("Mode", selection: $store.settings.smartMode) {
+                    Text("Smart").tag(true)
+                    Text("Simple cycle").tag(false)
                 }
                 .pickerStyle(.segmented)
-                Text(store.settings.smartMode
-                     ? "Первое нажатие само выбирает самую вероятную раскладку (проверка орфографии и распознавание языка macOS, без сети). Следующие нажатия — по кругу, исходная раскладка последней."
-                     : "Каждое нажатие — следующая раскладка по кругу, исходная последней.")
+                Text(LocalizedStringKey(store.settings.smartMode
+                     ? "The first press picks the most likely layout (macOS spell checking and language recognition, offline). Further presses cycle through the layouts, the original one last."
+                     : "Each press switches to the next layout in the cycle, the original one last."))
                     .font(.caption).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             Section {
-                Picker("Что переводить из набранного", selection: $store.settings.fragmentMode) {
-                    Text("Всё с последнего клика, Enter, ⌫, стрелок, смены раскладки").tag(FragmentMode.all)
-                    Text("Последнее слово").tag(FragmentMode.lastWord)
+                Picker("What to convert", selection: $store.settings.fragmentMode) {
+                    Text("Everything since the last click, Enter, ⌫, arrow key or layout switch").tag(FragmentMode.all)
+                    Text("Last word").tag(FragmentMode.lastWord)
                 }
             }
         }
@@ -88,7 +90,7 @@ private struct LayoutsTab: View {
                         HStack {
                             Image(systemName: "line.3.horizontal").foregroundStyle(.tertiary)
                             Toggle(isOn: includedBinding(source.id)) {
-                                Text("\(source.shortCode)  \(source.name)")
+                                Text(source.menuLabel)
                             }
                         }
                     }
@@ -96,15 +98,15 @@ private struct LayoutsTab: View {
                 }
                 .frame(minHeight: CGFloat(max(orderedSources.count, 2)) * 28 + 8)
             } header: {
-                Text("Порядок перевода по кругу")
+                Text("Cycle order")
             } footer: {
-                Text("Перетащите, чтобы изменить порядок. Снятая галочка — раскладка не участвует в переводе по кругу (прямой хоткей для неё работает).")
+                Text("Drag to reorder. Unchecked layouts are skipped when cycling (their direct hotkey still works).")
                     .font(.caption).foregroundStyle(.secondary)
             }
 
             Section {
                 ForEach(enabled, id: \.id) { source in
-                    LabeledContent("\(source.shortCode)  \(source.name)") {
+                    LabeledContent(source.menuLabel) {
                         VStack(alignment: .trailing, spacing: 6) {
                             HotkeyField(hotkey: bindingHotkey(source.id, \.primary),
                                         warning: warning(for: binding(source.id).primary, in: store.settings))
@@ -113,11 +115,11 @@ private struct LayoutsTab: View {
                         }
                     }
                 }
-                Toggle("Заодно переводить только что набранное в эту раскладку", isOn: $store.settings.directHotkeysConvert)
+                Toggle("Also convert just-typed text into this layout", isOn: $store.settings.directHotkeysConvert)
             } header: {
-                Text("Прямые хоткеи раскладок")
+                Text("Direct layout hotkeys")
             } footer: {
-                Text("У каждой раскладки — основной и дополнительный хоткей (например, ⌃⌥2 и F14).")
+                Text("Each layout has a primary and a secondary hotkey (e.g. ⌃⌥2 and F14).")
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
@@ -174,21 +176,21 @@ private struct WindowsTab: View {
     var body: some View {
         Form {
             Section {
-                Toggle("Помнить раскладку для каждого окна", isOn: $store.settings.windowMemoryEnabled)
-                Text("При переходе в окно включается раскладка, которая была в нём последней — в том числе после переключений Switchy.")
+                Toggle("Remember the layout for each window", isOn: $store.settings.windowMemoryEnabled)
+                Text("When you switch to a window, the layout last used in it is restored — including switches made by Switchy.")
                     .font(.caption).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
-            Section("Новое окно") {
-                Picker("Раскладка в новом окне", selection: $store.settings.newWindowPolicy) {
-                    Text("Оставлять текущую").tag(NewWindowPolicy.keepCurrent)
-                    Text("Всегда включать…").tag(NewWindowPolicy.fixed)
+            Section("New window") {
+                Picker("Layout in a new window", selection: $store.settings.newWindowPolicy) {
+                    Text("Keep current").tag(NewWindowPolicy.keepCurrent)
+                    Text("Always switch to…").tag(NewWindowPolicy.fixed)
                 }
                 if store.settings.newWindowPolicy == .fixed {
-                    Picker("Раскладка", selection: newWindowLayout) {
+                    Picker("Layout", selection: newWindowLayout) {
                         ForEach(enabled, id: \.id) { source in
-                            Text("\(source.shortCode)  \(source.name)").tag(source.id)
+                            Text(source.menuLabel).tag(source.id)
                         }
                     }
                 }
@@ -197,13 +199,13 @@ private struct WindowsTab: View {
 
             if WindowLayoutController.systemPerDocumentSwitchingEnabled {
                 Section {
-                    Label("Включена системная опция «Автоматически переключаться на источник ввода документа». Она спорит со Switchy — раскладка может мигать при переходе между окнами.",
+                    Label("The system option “Automatically switch to a document’s input source” is on. It conflicts with Switchy — the layout may flicker when switching windows.",
                           systemImage: "exclamationmark.triangle")
                         .foregroundStyle(.orange)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text("Системные настройки → Клавиатура → Источники ввода → Изменить… → снимите галочку.")
+                    Text("System Settings → Keyboard → Input Sources → Edit… → turn it off.")
                         .font(.caption)
-                    Button("Открыть настройки клавиатуры") {
+                    Button("Open Keyboard Settings") {
                         if let url = URL(string: "x-apple.systempreferences:com.apple.Keyboard-Settings.extension") {
                             NSWorkspace.shared.open(url)
                         }
@@ -233,39 +235,68 @@ private struct ClipboardTab: View {
     var body: some View {
         Form {
             Section {
-                Toggle("Вести историю буфера обмена", isOn: $store.settings.clipboardEnabled)
-                Text("Только текст. Пароли и другое содержимое, помеченное как секретное (1Password, Bitwarden, Keychain…), не сохраняется.")
+                Toggle("Keep clipboard history", isOn: $store.settings.clipboardEnabled)
+                Text("Text only. Passwords and other content marked as sensitive (1Password, Bitwarden, Keychain…) are never saved.")
                     .font(.caption).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
             Section {
-                LabeledContent("Панель истории") {
+                LabeledContent("History panel") {
                     HotkeyField(hotkey: $store.settings.clipboardHotkey,
                                 warning: warning(for: store.settings.clipboardHotkey, in: store.settings))
                 }
-                Picker("Хранить элементов", selection: $store.settings.clipboardCapacity) {
+                Picker("Items to keep", selection: $store.settings.clipboardCapacity) {
                     ForEach([20, 50, 100, 200, 500], id: \.self) { Text("\($0)").tag($0) }
                 }
-                Toggle("Помнить после перезапуска", isOn: $store.settings.clipboardPersist)
-                Text(store.settings.clipboardPersist
-                     ? "История хранится на диске в ~/Library/Application Support/Switchy (доступ только у вас)."
-                     : "История хранится только в памяти и пропадает при выходе из Switchy.")
+                Toggle("Remember after restart", isOn: $store.settings.clipboardPersist)
+                Text(LocalizedStringKey(store.settings.clipboardPersist
+                     ? "History is stored on disk in ~/Library/Application Support/Switchy (accessible only to you)."
+                     : "History is kept in memory only and is lost when Switchy quits."))
                     .font(.caption).foregroundStyle(.secondary)
             }
             .disabled(!store.settings.clipboardEnabled)
 
             Section {
-                LabeledContent("В истории: \(clipboard.history.items.count)") {
-                    Button("Очистить историю…", role: .destructive) { confirmClear = true }
+                LabeledContent("In history: \(clipboard.history.items.count)") {
+                    Button("Clear History…", role: .destructive) { confirmClear = true }
                         .disabled(clipboard.history.items.isEmpty)
                 }
             }
         }
         .formStyle(.grouped)
-        .confirmationDialog("Очистить всю историю буфера обмена?", isPresented: $confirmClear) {
-            Button("Очистить", role: .destructive) { clipboard.clear() }
+        .confirmationDialog("Clear the entire clipboard history?", isPresented: $confirmClear) {
+            Button("Clear", role: .destructive) { clipboard.clear() }
         }
+    }
+}
+
+// MARK: - Исключения
+
+private struct ExclusionsTab: View {
+    @ObservedObject var store: SettingsStore
+
+    var body: some View {
+        Form {
+            Section {
+                AppListEditor(bundleIDs: $store.settings.excludedConversionApps)
+            } header: {
+                Text("Don't convert text")
+            } footer: {
+                Text("The conversion hotkey is disabled and typing isn't tracked there. Direct layout hotkeys only switch the layout. Useful for terminals, games, remote desktop.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+
+            Section {
+                AppListEditor(bundleIDs: $store.settings.excludedClipboardApps)
+            } header: {
+                Text("Don't save clipboard")
+            } footer: {
+                Text("Text copied in these apps is not added to history (e.g. a banking app or a password manager that doesn't mark its data as sensitive).")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+        }
+        .formStyle(.grouped)
     }
 }
 
@@ -275,28 +306,44 @@ private struct GeneralTab: View {
     @State private var launchAtLogin = LaunchAtLogin.isEnabled
     @State private var accessibility = Permissions.accessibility
     @State private var inputMonitoring = Permissions.inputMonitoring
+    @State private var language = AppLanguage.selected
+    @State private var askRestart = false
 
     var body: some View {
         Form {
             Section {
-                Toggle("Запускать Switchy при входе в систему", isOn: $launchAtLogin)
+                Picker("Language", selection: $language) {
+                    Text("System").tag("")
+                    ForEach(AppLanguage.options, id: \.code) { option in
+                        Text(verbatim: option.name).tag(option.code)
+                    }
+                }
+                .onChange(of: language) { _, newValue in
+                    AppLanguage.select(newValue)
+                    askRestart = true
+                }
+                Toggle("Launch Switchy at login", isOn: $launchAtLogin)
                     .onChange(of: launchAtLogin) { _, newValue in
                         LaunchAtLogin.set(newValue)
                         launchAtLogin = LaunchAtLogin.isEnabled
                     }
             }
 
-            Section("Права доступа") {
-                permissionRow("Универсальный доступ", granted: accessibility, open: Permissions.openAccessibilitySettings)
-                permissionRow("Мониторинг ввода", granted: inputMonitoring, open: Permissions.openInputMonitoringSettings)
+            Section("Permissions") {
+                permissionRow("Accessibility", granted: accessibility, open: Permissions.openAccessibilitySettings)
+                permissionRow("Input Monitoring", granted: inputMonitoring, open: Permissions.openInputMonitoringSettings)
             }
 
             Section {
-                LabeledContent("Версия", value: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?")
+                LabeledContent("Version", value: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?")
                 Link("github.com/hdd1/Switchy", destination: URL(string: "https://github.com/hdd1/Switchy")!)
             }
         }
         .formStyle(.grouped)
+        .alert("Restart Switchy to apply the new language.", isPresented: $askRestart) {
+            Button("Restart Now") { AppLanguage.relaunch() }
+            Button("Later", role: .cancel) {}
+        }
         .onAppear {
             launchAtLogin = LaunchAtLogin.isEnabled
             accessibility = Permissions.accessibility
@@ -304,12 +351,12 @@ private struct GeneralTab: View {
         }
     }
 
-    private func permissionRow(_ title: String, granted: Bool, open: @escaping () -> Void) -> some View {
+    private func permissionRow(_ title: LocalizedStringKey, granted: Bool, open: @escaping () -> Void) -> some View {
         LabeledContent(title) {
             if granted {
-                Label("Выдано", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+                Label("Granted", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
             } else {
-                Button("Открыть настройки…", action: open)
+                Button("Open Settings…", action: open)
             }
         }
     }

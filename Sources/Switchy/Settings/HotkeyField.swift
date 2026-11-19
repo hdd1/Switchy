@@ -6,7 +6,7 @@ import SwitchyCore
 @MainActor
 final class HotkeyRecorder: ObservableObject {
     @Published private(set) var isRecording = false
-    @Published private(set) var hint = "Нажмите сочетание или тапните модификатор…"
+    @Published private(set) var hint = String(localized: "Press a shortcut or tap a modifier…")
 
     private var monitor: Any?
     private var completion: ((Hotkey) -> Void)?
@@ -21,7 +21,7 @@ final class HotkeyRecorder: ObservableObject {
         stop()
         self.completion = completion
         isRecording = true
-        hint = "Нажмите сочетание или тапните модификатор…"
+        hint = String(localized: "Press a shortcut or tap a modifier…")
         SettingsStore.shared.isRecordingHotkey = true
 
         monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { [weak self] event in
@@ -74,7 +74,7 @@ final class HotkeyRecorder: ObservableObject {
                 return
             }
             lastTap = (key, now)
-            hint = "Тап: \(key.displayName)… (ещё раз — двойной тап)"
+            hint = String(localized: "Tap: \(key.displayName)… (again — double tap)")
             singleTapTask = Task { @MainActor [weak self] in
                 try? await Task.sleep(for: .seconds(Self.doubleTapInterval + 0.05))
                 guard !Task.isCancelled else { return }
@@ -125,7 +125,7 @@ struct HotkeyField: View {
                 .menuStyle(.borderlessButton)
                 .menuIndicator(.hidden)
                 .fixedSize()
-                .help("Выбрать F13–F20 без нажатия")
+                .help("Pick F13–F20 without pressing")
 
                 if hotkey != nil {
                     Button {
@@ -134,7 +134,7 @@ struct HotkeyField: View {
                         Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
                     }
                     .buttonStyle(.borderless)
-                    .help("Убрать хоткей")
+                    .help("Remove hotkey")
                 }
             }
             if let warning {
@@ -149,6 +149,6 @@ struct HotkeyField: View {
 
     private var label: String {
         if recorder.isRecording { return recorder.hint }
-        return hotkey.map(KeyNames.describe) ?? "Не задан"
+        return hotkey.map(KeyNames.describe) ?? String(localized: "Not set")
     }
 }

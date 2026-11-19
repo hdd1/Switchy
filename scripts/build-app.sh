@@ -24,6 +24,8 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN_DIR/Switchy" "$APP/Contents/MacOS/Switchy"
 cp "$ROOT/Support/Info.plist" "$APP/Contents/Info.plist"
+cp "$ROOT/Support/AppIcon.icns" "$APP/Contents/Resources/AppIcon.icns"
+cp -R "$ROOT/Support/Localization/"*.lproj "$APP/Contents/Resources/"
 
 echo "=== Подпись ($SIGN_ID) ==="
 codesign --force --sign "$SIGN_ID" --timestamp=none "$APP"

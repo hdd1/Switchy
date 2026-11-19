@@ -25,7 +25,7 @@ final class HotkeyController {
 
     private func handle(type: CGEventType, event: CGEvent) -> Bool {
         // Во время записи хоткея в настройках ничего не перехватываем.
-        if store.isRecordingHotkey { return false }
+        if store.isRecordingHotkey || store.isPaused { return false }
 
         guard let keyEvent = KeyEvent(cgType: type, event: event) else { return false }
         let result = engine.process(keyEvent, at: ProcessInfo.processInfo.systemUptime)

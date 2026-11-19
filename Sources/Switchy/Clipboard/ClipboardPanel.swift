@@ -184,7 +184,7 @@ struct ClipboardPanelView: View {
         VStack(spacing: 0) {
             HStack(spacing: 6) {
                 Image(systemName: "doc.on.clipboard").foregroundStyle(.secondary)
-                TextField("Поиск в истории буфера", text: $model.query)
+                TextField("Search clipboard history", text: $model.query)
                     .textFieldStyle(.plain)
                     .font(.system(size: 14))
                     .focused($searchFocused)
@@ -197,7 +197,7 @@ struct ClipboardPanelView: View {
 
             if items.isEmpty {
                 Spacer()
-                Text(store.history.items.isEmpty ? "История пуста — скопируйте что-нибудь" : "Ничего не найдено")
+                Text(LocalizedStringKey(store.history.items.isEmpty ? "History is empty — copy something" : "Nothing found"))
                     .foregroundStyle(.secondary)
                 Spacer()
             } else {
@@ -220,7 +220,7 @@ struct ClipboardPanelView: View {
             }
 
             Divider()
-            Text("↩ вставить · 1–9 быстрый выбор · ⌘⌫ удалить · esc закрыть")
+            Text("↩ paste · 1–9 quick pick · ⌘⌫ delete · esc close")
                 .font(.caption)
                 .foregroundStyle(.secondary)
                 .padding(.vertical, 6)
@@ -248,7 +248,7 @@ private struct ClipboardRow: View {
                     .lineLimit(1)
                     .truncationMode(.tail)
                 if item.lineCount > 1 {
-                    Text("+ ещё \(item.lineCount - 1) стр.")
+                    Text("+ \(item.lineCount - 1) more lines")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }

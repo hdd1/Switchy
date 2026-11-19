@@ -1,5 +1,6 @@
 import AppKit
 import Carbon
+import Combine
 import SwitchyCore
 
 /// Иконка Switchy в строке меню (код текущей раскладки) и её меню.
@@ -9,6 +10,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private let menu = NSMenu()
     /// Открыть окно настроек.
     var onOpenSettings: (() -> Void)?
+    private var pauseObserver: AnyCancellable?
 
     override init() {
         item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -16,15 +18,27 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         menu.delegate = self
         item.menu = menu
         observeInputSourceChanges()
+        pauseObserver = SettingsStore.shared.$isPaused
+            .dropFirst()
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in MainActor.assumeIsolated { self?.refresh() } }
         refresh()
     }
 
-    /// Обновляет заголовок: код текущей раскладки, ⚠︎ — если не хватает прав.
+    /// Обновляет заголовок: код текущей раскладки; ⚠︎ — не хватает прав, ⏸ — пауза.
     func refresh() {
         guard let button = item.button else { return }
         let code = InputSources.current()?.shortCode ?? "??"
-        button.title = Permissions.allGranted ? code : "\(code)⚠︎"
-        button.toolTip = Permissions.allGranted ? "Switchy" : "Switchy: нужны права доступа"
+        if !Permissions.allGranted {
+            button.title = "\(code)⚠︎"
+            button.toolTip = String(localized: "Switchy: permissions required")
+        } else if SettingsStore.shared.isPaused {
+            button.title = "\(code)⏸"
+            button.toolTip = String(localized: "Switchy is paused")
+        } else {
+            button.title = code
+            button.toolTip = "Switchy"
+        }
     }
 
     /// Система рассылает уведомление при любой смене раскладки (вручную, хоткеем, программно).
@@ -53,7 +67,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         let currentID = InputSources.current()?.id
         for source in InputSources.enabled() {
             let entry = NSMenuItem(
-                title: "\(source.shortCode)  \(source.name)",
+                title: String(localized: "\(source.shortCode)  \(source.name)"),
                 action: #selector(selectSource(_:)),
                 keyEquivalent: ""
             )
@@ -65,39 +79,42 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
         menu.addItem(.separator())
         addPermissionItem(
-            title: "Универсальный доступ",
+            title: String(localized: "Accessibility"),
             granted: Permissions.accessibility,
             action: #selector(openAccessibility)
         )
         addPermissionItem(
-            title: "Мониторинг ввода",
+            title: String(localized: "Input Monitoring"),
             granted: Permissions.inputMonitoring,
             action: #selector(openInputMonitoring)
         )
 
         if WindowLayoutController.systemPerDocumentSwitchingEnabled {
             let warn = NSMenuItem(
-                title: "⚠️ Выключите системную «память раскладки документа»…",
+                title: String(localized: "⚠️ Turn off the system “document input source” option…"),
                 action: #selector(openKeyboardSettings), keyEquivalent: ""
             )
             warn.target = self
-            warn.toolTip = "Клавиатура → Источники ввода → Изменить… → «Автоматически переключаться на источник ввода документа». Switchy запоминает раскладку окон сам."
+            warn.toolTip = String(localized: "Keyboard → Input Sources → Edit… → “Automatically switch to a document’s input source”. Switchy remembers window layouts itself.")
             menu.addItem(warn)
         }
 
         menu.addItem(.separator())
-        let settings = NSMenuItem(title: "Настройки…", action: #selector(openSettings), keyEquivalent: ",")
+        let pause = NSMenuItem(title: String(localized: "Pause"), action: #selector(togglePause), keyEquivalent: "")
+        pause.target = self
+        pause.state = SettingsStore.shared.isPaused ? .on : .off
+        menu.addItem(pause)
+        let settings = NSMenuItem(title: String(localized: "Settings…"), action: #selector(openSettings), keyEquivalent: ",")
         settings.target = self
         menu.addItem(settings)
-        let quit = NSMenuItem(title: "Выход", action: #selector(quit), keyEquivalent: "q")
+        let quit = NSMenuItem(title: String(localized: "Quit"), action: #selector(quit), keyEquivalent: "q")
         quit.target = self
         menu.addItem(quit)
     }
 
     private func addPermissionItem(title: String, granted: Bool, action: Selector) {
-        let mark = granted ? "✅" : "⚠️"
-        let suffix = granted ? "" : " — открыть настройки…"
-        let item = NSMenuItem(title: "\(mark) \(title)\(suffix)", action: granted ? nil : action, keyEquivalent: "")
+        let text = granted ? String(localized: "✅ \(title)") : String(localized: "⚠️ \(title) — open settings…")
+        let item = NSMenuItem(title: text, action: granted ? nil : action, keyEquivalent: "")
         item.target = self
         item.isEnabled = !granted
         menu.addItem(item)
@@ -112,6 +129,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     @objc private func openInputMonitoring() { Permissions.openInputMonitoringSettings() }
     @objc private func quit() { NSApp.terminate(nil) }
     @objc private func openSettings() { onOpenSettings?() }
+    @objc private func togglePause() { SettingsStore.shared.isPaused.toggle() }
     @objc private func openKeyboardSettings() {
         if let url = URL(string: "x-apple.systempreferences:com.apple.Keyboard-Settings.extension") {
             NSWorkspace.shared.open(url)
