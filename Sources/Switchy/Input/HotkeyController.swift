@@ -8,14 +8,15 @@ final class HotkeyController {
     private var engine = HotkeyEngine()
     private let store = SettingsStore.shared
     let typing = TypingController()
+    /// Хоткей истории буфера обмена.
+    var onClipboardHistory: (() -> Void)?
 
     init() {
         tap.handler = { [weak self] type, event in
             self?.handle(type: type, event: event) ?? false
         }
         store.observe { [weak self] settings in
-            // История буфера обмена (этап 7) пока не подключена.
-            self?.engine.bindings = settings.hotkeyBindings(includeClipboard: false)
+            self?.engine.bindings = settings.hotkeyBindings(includeClipboard: true)
         }
     }
 
@@ -54,8 +55,7 @@ final class HotkeyController {
         case .convert:
             typing.convert()
         case .clipboardHistory:
-            // Этап 7: панель истории буфера обмена.
-            break
+            onClipboardHistory?()
         }
     }
 }

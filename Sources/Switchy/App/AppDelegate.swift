@@ -5,6 +5,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusBar: StatusBarController?
     private var hotkeys: HotkeyController?
     private var windowLayouts: WindowLayoutController?
+    private let clipboard = ClipboardController()
     private var permissionTimer: Timer?
     private let settingsWindow = SettingsWindowController()
 
@@ -44,7 +45,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func permissionsGranted() {
+        clipboard.start()
+
         let controller = HotkeyController()
+        controller.onClipboardHistory = { [weak self] in self?.clipboard.togglePanel() }
         if controller.start() {
             hotkeys = controller
         }

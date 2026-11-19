@@ -13,6 +13,8 @@ struct SettingsView: View {
                 .tabItem { Label("Раскладки", systemImage: "keyboard") }
             WindowsTab(store: store)
                 .tabItem { Label("Окна", systemImage: "macwindow.on.rectangle") }
+            ClipboardTab(store: store)
+                .tabItem { Label("Буфер обмена", systemImage: "doc.on.clipboard") }
             GeneralTab()
                 .tabItem { Label("Основные", systemImage: "gearshape") }
         }
@@ -218,6 +220,52 @@ private struct WindowsTab: View {
             get: { store.settings.newWindowLayout ?? store.cycle.first ?? enabled.first?.id ?? "" },
             set: { store.settings.newWindowLayout = $0 }
         )
+    }
+}
+
+// MARK: - Буфер обмена
+
+private struct ClipboardTab: View {
+    @ObservedObject var store: SettingsStore
+    @ObservedObject private var clipboard = ClipboardStore.shared
+    @State private var confirmClear = false
+
+    var body: some View {
+        Form {
+            Section {
+                Toggle("Вести историю буфера обмена", isOn: $store.settings.clipboardEnabled)
+                Text("Только текст. Пароли и другое содержимое, помеченное как секретное (1Password, Bitwarden, Keychain…), не сохраняется.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Section {
+                LabeledContent("Панель истории") {
+                    HotkeyField(hotkey: $store.settings.clipboardHotkey,
+                                warning: warning(for: store.settings.clipboardHotkey, in: store.settings))
+                }
+                Picker("Хранить элементов", selection: $store.settings.clipboardCapacity) {
+                    ForEach([20, 50, 100, 200, 500], id: \.self) { Text("\($0)").tag($0) }
+                }
+                Toggle("Помнить после перезапуска", isOn: $store.settings.clipboardPersist)
+                Text(store.settings.clipboardPersist
+                     ? "История хранится на диске в ~/Library/Application Support/Switchy (доступ только у вас)."
+                     : "История хранится только в памяти и пропадает при выходе из Switchy.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            .disabled(!store.settings.clipboardEnabled)
+
+            Section {
+                LabeledContent("В истории: \(clipboard.history.items.count)") {
+                    Button("Очистить историю…", role: .destructive) { confirmClear = true }
+                        .disabled(clipboard.history.items.isEmpty)
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .confirmationDialog("Очистить всю историю буфера обмена?", isPresented: $confirmClear) {
+            Button("Очистить", role: .destructive) { clipboard.clear() }
+        }
     }
 }
 
