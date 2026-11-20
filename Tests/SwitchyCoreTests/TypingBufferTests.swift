@@ -18,6 +18,28 @@ struct TypingBufferTests {
         #expect(b.strokes.map(\.keyCode) == [2, 17])
     }
 
+    @Test func pauseStartsNewFragment() {
+        var b = TypingBuffer()
+        // «я » набрано подряд, затем пауза 6 с и «sql».
+        for (i, code) in [UInt16(5), 49].enumerated() {
+            b.handleKeyDown(keyCode: code, modifiers: [], capsLock: false, at: Double(i) * 0.2, idleReset: 5)
+        }
+        b.handleKeyDown(keyCode: 1, modifiers: [], capsLock: false, at: 6.5, idleReset: 5)
+        b.handleKeyDown(keyCode: 12, modifiers: [], capsLock: false, at: 6.7, idleReset: 5)
+        #expect(b.strokes.map(\.keyCode) == [1, 12])
+    }
+
+    @Test func noPauseKeepsFragment() {
+        var b = TypingBuffer()
+        for (i, code) in [UInt16(5), 4, 11].enumerated() {
+            b.handleKeyDown(keyCode: code, modifiers: [], capsLock: false, at: Double(i) * 4, idleReset: 5)
+        }
+        #expect(b.strokes.count == 3)
+        // Таймаут выключен (0) — даже большая пауза ничего не забывает.
+        b.handleKeyDown(keyCode: 2, modifiers: [], capsLock: false, at: 1000, idleReset: 0)
+        #expect(b.strokes.count == 4)
+    }
+
     @Test func navigationAndCommandsReset() {
         var b = TypingBuffer()
         type(&b, [5, 4])

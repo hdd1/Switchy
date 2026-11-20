@@ -21,14 +21,21 @@ public struct TypingBuffer: Sendable {
     }
 
     public private(set) var strokes: [KeyStroke] = []
+    /// Время последнего добавленного нажатия — для «забывания» после паузы.
+    private var lastAppendTime: TimeInterval?
 
     public init() {}
 
     public var isEmpty: Bool { strokes.isEmpty }
 
     /// Обрабатывает нажатие клавиши (уже прошедшее мимо хоткеев).
+    /// `idleReset` > 0: если с прошлого нажатия прошло больше — набранное до паузы забывается,
+    /// и это нажатие начинает новый фрагмент.
     @discardableResult
-    public mutating func handleKeyDown(keyCode: UInt16, modifiers: Modifiers, capsLock: Bool) -> Outcome {
+    public mutating func handleKeyDown(
+        keyCode: UInt16, modifiers: Modifiers, capsLock: Bool,
+        at time: TimeInterval = 0, idleReset: TimeInterval = 0
+    ) -> Outcome {
         // Сочетания с ⌘/⌃/⌥ — это команды или спецсимволы, а не набор текста.
         if modifiers.contains(.command) || modifiers.contains(.control) || modifiers.contains(.option) {
             reset()
@@ -40,6 +47,10 @@ public struct TypingBuffer: Sendable {
             reset()
             return .reset
         }
+        if idleReset > 0, let last = lastAppendTime, time - last > idleReset {
+            strokes.removeAll(keepingCapacity: true)
+        }
+        lastAppendTime = time
         strokes.append(KeyStroke(keyCode: keyCode, shift: modifiers.contains(.shift), capsLock: capsLock))
         if strokes.count > Self.maxLength {
             strokes.removeFirst(strokes.count - Self.maxLength)
@@ -49,6 +60,7 @@ public struct TypingBuffer: Sendable {
 
     public mutating func reset() {
         strokes.removeAll(keepingCapacity: true)
+        lastAppendTime = nil
     }
 
     /// Фрагмент для перевода: всё или последнее слово с хвостовыми пробелами.

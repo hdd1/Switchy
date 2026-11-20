@@ -17,6 +17,10 @@
 "What to convert" = "What to convert";
 "Everything since the last click, Enter, ⌫, arrow key or layout switch" = "Everything since the last click, Enter, ⌫, arrow key or layout switch";
 "Last word" = "Last word";
+"Forget typed text after a pause of" = "Forget typed text after a pause of";
+"Never" = "Never";
+"%lld s" = "%lld s";
+"If you pause typing for longer than this, the next keystroke starts a new fragment — only text typed after the pause will be converted." = "If you pause typing for longer than this, the next keystroke starts a new fragment — only text typed after the pause will be converted.";
 "Cycle order" = "Cycle order";
 "Drag to reorder. Unchecked layouts are skipped when cycling (their direct hotkey still works)." = "Drag to reorder. Unchecked layouts are skipped when cycling (their direct hotkey still works).";
 "Also convert just-typed text into this layout" = "Also convert just-typed text into this layout";

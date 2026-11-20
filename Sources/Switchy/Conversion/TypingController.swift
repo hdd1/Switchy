@@ -65,7 +65,10 @@ final class TypingController {
             session = nil
             buffer.reset()
         }
-        buffer.handleKeyDown(keyCode: keyCode, modifiers: modifiers, capsLock: capsLock)
+        buffer.handleKeyDown(
+            keyCode: keyCode, modifiers: modifiers, capsLock: capsLock,
+            at: ProcessInfo.processInfo.systemUptime, idleReset: settings.idleResetSeconds
+        )
     }
 
     func reset() {

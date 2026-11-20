@@ -18,6 +18,10 @@ Each press switches to the next layout in the cycle, the original one last.	Ка
 What to convert	Что переводить из набранного	Що перекладати з набраного
 Everything since the last click, Enter, ⌫, arrow key or layout switch	Всё с последнего клика, Enter, ⌫, стрелок, смены раскладки	Усе від останнього кліку, Enter, ⌫, стрілок, зміни розкладки
 Last word	Последнее слово	Останнє слово
+Forget typed text after a pause of	Забывать набранное после паузы	Забувати набране після паузи
+Never	Никогда	Ніколи
+%lld s	%lld с	%lld с
+If you pause typing for longer than this, the next keystroke starts a new fragment — only text typed after the pause will be converted.	Если в наборе была пауза дольше этого времени, следующее нажатие начинает новый фрагмент — переведётся только набранное после паузы.	Якщо в наборі була пауза довша за цей час, наступне натискання починає новий фрагмент — перекладеться лише набране після паузи.
 Cycle order	Порядок перевода по кругу	Порядок перекладу по колу
 Drag to reorder. Unchecked layouts are skipped when cycling (their direct hotkey still works).	Перетащите, чтобы изменить порядок. Снятая галочка — раскладка не участвует в переводе по кругу (прямой хоткей для неё работает).	Перетягніть, щоб змінити порядок. Знята позначка — розкладка не бере участі в перекладі по колу (пряма гаряча клавіша для неї працює).
 Also convert just-typed text into this layout	Заодно переводить только что набранное в эту раскладку	Заодно перекладати щойно набране в цю розкладку

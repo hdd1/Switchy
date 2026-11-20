@@ -17,6 +17,10 @@
 "What to convert" = "Що перекладати з набраного";
 "Everything since the last click, Enter, ⌫, arrow key or layout switch" = "Усе від останнього кліку, Enter, ⌫, стрілок, зміни розкладки";
 "Last word" = "Останнє слово";
+"Forget typed text after a pause of" = "Забувати набране після паузи";
+"Never" = "Ніколи";
+"%lld s" = "%lld с";
+"If you pause typing for longer than this, the next keystroke starts a new fragment — only text typed after the pause will be converted." = "Якщо в наборі була пауза довша за цей час, наступне натискання починає новий фрагмент — перекладеться лише набране після паузи.";
 "Cycle order" = "Порядок перекладу по колу";
 "Drag to reorder. Unchecked layouts are skipped when cycling (their direct hotkey still works)." = "Перетягніть, щоб змінити порядок. Знята позначка — розкладка не бере участі в перекладі по колу (пряма гаряча клавіша для неї працює).";
 "Also convert just-typed text into this layout" = "Заодно перекладати щойно набране в цю розкладку";

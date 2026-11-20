@@ -70,6 +70,15 @@ private struct ConversionTab: View {
                     Text("Everything since the last click, Enter, ⌫, arrow key or layout switch").tag(FragmentMode.all)
                     Text("Last word").tag(FragmentMode.lastWord)
                 }
+                Picker("Forget typed text after a pause of", selection: $store.settings.idleResetSeconds) {
+                    Text("Never").tag(0.0)
+                    ForEach([2.0, 3.0, 5.0, 10.0, 30.0], id: \.self) { seconds in
+                        Text("\(Int(seconds)) s").tag(seconds)
+                    }
+                }
+                Text("If you pause typing for longer than this, the next keystroke starts a new fragment — only text typed after the pause will be converted.")
+                    .font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
         }
         .formStyle(.grouped)

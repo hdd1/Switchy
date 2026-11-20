@@ -20,6 +20,8 @@ public struct AppSettings: Codable, Equatable, Sendable {
     public var convertHotkey: Hotkey? = .modifierTap(.leftOption)
     public var smartMode = true
     public var fragmentMode: FragmentMode = .all
+    /// Пауза в наборе (секунды), после которой набранное забывается; 0 — никогда.
+    public var idleResetSeconds: Double = 5
 
     // Раскладки
     /// Порядок круга (идентификаторы раскладок). Новые включённые раскладки добавляются в конец.
@@ -116,7 +118,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
     // MARK: - Codable (терпимое к отсутствующим полям)
 
     private enum CodingKeys: String, CodingKey {
-        case convertHotkey, smartMode, fragmentMode
+        case convertHotkey, smartMode, fragmentMode, idleResetSeconds
         case cycleOrder, cycleExcluded, layoutBindings, directHotkeysConvert
         case windowMemoryEnabled, newWindowPolicy, newWindowLayout
         case clipboardEnabled, clipboardHotkey, clipboardCapacity, clipboardPersist
@@ -131,6 +133,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         convertHotkey = c.contains(.convertHotkey) ? try c.decodeIfPresent(Hotkey.self, forKey: .convertHotkey) : d.convertHotkey
         smartMode = try c.decodeIfPresent(Bool.self, forKey: .smartMode) ?? d.smartMode
         fragmentMode = try c.decodeIfPresent(FragmentMode.self, forKey: .fragmentMode) ?? d.fragmentMode
+        idleResetSeconds = try c.decodeIfPresent(Double.self, forKey: .idleResetSeconds) ?? d.idleResetSeconds
         cycleOrder = try c.decodeIfPresent([String].self, forKey: .cycleOrder) ?? d.cycleOrder
         cycleExcluded = try c.decodeIfPresent(Set<String>.self, forKey: .cycleExcluded) ?? d.cycleExcluded
         layoutBindings = try c.decodeIfPresent([LayoutBinding].self, forKey: .layoutBindings) ?? d.layoutBindings
@@ -152,6 +155,7 @@ public struct AppSettings: Codable, Equatable, Sendable {
         try c.encode(convertHotkey, forKey: .convertHotkey)
         try c.encode(smartMode, forKey: .smartMode)
         try c.encode(fragmentMode, forKey: .fragmentMode)
+        try c.encode(idleResetSeconds, forKey: .idleResetSeconds)
         try c.encode(cycleOrder, forKey: .cycleOrder)
         try c.encode(cycleExcluded, forKey: .cycleExcluded)
         try c.encode(layoutBindings, forKey: .layoutBindings)
