@@ -6,7 +6,8 @@
 #   scripts/build-app.sh          — только собрать
 #   scripts/build-app.sh --run    — собрать, остановить запущенный Switchy и запустить новый
 #
-# Другой сертификат: SWITCHY_SIGN_ID="..." scripts/build-app.sh
+# Другой сертификат: SWITCHY_SIGN_ID="..." scripts/build-app.sh  (SWITCHY_SIGN_ID=- — ad-hoc)
+# Универсальная сборка (Apple Silicon + Intel): SWITCHY_UNIVERSAL=1 scripts/build-app.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -15,9 +16,14 @@ SIGN_ID="${SWITCHY_SIGN_ID:-Apple Development}"
 
 cd "$ROOT"
 
-echo "=== swift build (release) ==="
-swift build -c release --arch arm64
-BIN_DIR="$(swift build -c release --arch arm64 --show-bin-path)"
+ARCH_FLAGS=(--arch arm64)
+if [[ "${SWITCHY_UNIVERSAL:-0}" == "1" ]]; then
+    ARCH_FLAGS=(--arch arm64 --arch x86_64)
+fi
+
+echo "=== swift build (release, ${ARCH_FLAGS[*]}) ==="
+swift build -c release "${ARCH_FLAGS[@]}"
+BIN_DIR="$(swift build -c release "${ARCH_FLAGS[@]}" --show-bin-path)"
 
 echo "=== Сборка Switchy.app ==="
 rm -rf "$APP"
