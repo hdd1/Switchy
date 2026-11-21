@@ -119,7 +119,9 @@ final class TypingController {
     /// Выделение прямые хоткеи не трогают (кроме продолжения уже начатой серии).
     func selectLayout(id target: String) {
         guard let currentID = InputSources.current()?.id, currentID != target else { return }
-        if SettingsStore.shared.frontmostAppExcludedFromConversion {
+        // Перевод выключен (или приложение в исключениях) — только переключаем раскладку.
+        // Набранное сбрасываем, как при ручной смене раскладки: дальше текст пойдёт в другой раскладке.
+        guard settings.directHotkeysConvert, !SettingsStore.shared.frontmostAppExcludedFromConversion else {
             reset()
             switchLayout(to: target)
             return
@@ -130,7 +132,7 @@ final class TypingController {
             content = session.content
         } else {
             let strokes = buffer.fragment(settings.fragmentMode)
-            guard settings.directHotkeysConvert, !strokes.isEmpty else {
+            guard !strokes.isEmpty else {
                 switchLayout(to: target)
                 return
             }

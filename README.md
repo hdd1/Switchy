@@ -19,7 +19,7 @@ A tiny macOS menu-bar utility. No dictionaries to maintain, no network, nothing 
   language recognition (on-device). Further taps cycle through the remaining layouts, the original one last.
 - **Fix selected text.** Select text and tap the same key.
 - **Direct layout hotkeys.** One hotkey per layout (e.g. `⌃⌥1` → English, `⌃⌥2` → Russian, or F13/F14/F15).
-  If you have just typed something, it is converted into that layout too.
+  Optionally, they also convert just-typed text into that layout.
 - **Per-window layout memory.** Every window keeps its own layout — including switches made by Switchy.
 - **Clipboard history.** Text only, with a quick picker near the text cursor (`⇧⌘V`): numbers 1–9, search,
   arrows. Passwords marked as sensitive by password managers are never saved.
@@ -53,7 +53,7 @@ Requires macOS 15 or later (Apple Silicon or Intel).
 | Action | Hotkey |
 |---|---|
 | Convert typed / selected text | tap **Left Option** |
-| Switch to layout 1, 2, 3… (and convert just-typed text) | `⌃⌥1`, `⌃⌥2`, `⌃⌥3`… |
+| Switch to layout 1, 2, 3… | `⌃⌥1`, `⌃⌥2`, `⌃⌥3`… |
 | Clipboard history | `⇧⌘V` |
 
 All hotkeys can be changed in **Settings** (menu-bar icon → Settings…).

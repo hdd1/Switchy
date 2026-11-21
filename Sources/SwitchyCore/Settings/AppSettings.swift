@@ -29,8 +29,9 @@ public struct AppSettings: Codable, Equatable, Sendable {
     /// Раскладки, не участвующие в переводе по кругу.
     public var cycleExcluded: Set<String> = []
     public var layoutBindings: [LayoutBinding] = []
-    /// Прямые хоткеи заодно переводят только что набранное.
-    public var directHotkeysConvert = true
+    /// Прямые хоткеи заодно переводят только что набранное (по умолчанию выключено:
+    /// от «переключить раскладку» обычно не ждут, что изменится уже набранный текст).
+    public var directHotkeysConvert = false
 
     // Окна
     public var windowMemoryEnabled = true
