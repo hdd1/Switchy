@@ -3,6 +3,11 @@ import Carbon
 import SwitchyCore
 
 /// Перевод текста: набранного (буфер набора) и выделенного, серия нажатий, прямые хоткеи раскладок.
+///
+/// Серия нажатий хоткея перевода:
+/// - 1-е нажатие в умном режиме — перевод по словам (только слова, набранные не в той раскладке);
+///   если таких слов нет — умный выбор раскладки для всего фрагмента;
+/// - 2-е и дальше — весь фрагмент по кругу, исходная раскладка последней.
 @MainActor
 final class TypingController {
     private var settings: AppSettings { SettingsStore.shared.settings }
@@ -11,29 +16,27 @@ final class TypingController {
     private var session: Session?
     private var layouts: [String: KeyboardLayout] = [:]
     private let detector = SmartDetector()
-    /// Раскладка, которую включили мы сами, — её уведомление о смене не сбрасывает буфер.
-    private var ownSwitchTarget: String?
+    /// Раскладка, которую последней включили мы сами. Уведомления о ней (они приходят с задержкой,
+    /// иногда по нескольку) не считаются ручной сменой раскладки. Забывается, когда раскладка
+    /// сменилась на другую не нами.
+    private var ownLayout: String?
     /// Цепочка отложенных действий: следующее начинается только после предыдущего.
     private var pendingWork: Task<Void, Never>?
     /// Идёт чтение выделения — повторные нажатия игнорируем.
     private var readingSelection = false
 
-    /// Серия нажатий хоткея перевода над одним и тем же фрагментом.
+    /// Серия нажатий над одним и тем же фрагментом.
     private struct Session {
-        enum Content {
-            /// Набранное: физические нажатия.
-            case typed([KeyStroke])
-            /// Выделенное: готовый текст и раскладка, в которой он набран.
-            case selection(text: String, source: String)
-        }
-        let content: Content
+        /// Фрагмент: нажатия (набранное) или символы выделенного текста в исходной раскладке.
+        let tokens: [TextToken]
         /// Раскладка, в которой фрагмент был набран.
         let original: String
-        /// Порядок раскладок серии (исходная — последней).
+        /// Порядок раскладок для перевода целиком (исходная — последней).
         let sequence: [String]
-        /// Индекс текущей раскладки в `sequence`.
-        var index: Int
-        var current: String { sequence[index] }
+        /// Шаг в `sequence`, который сейчас в поле; -1 — умный перевод по словам.
+        var step: Int
+        /// Текст, который сейчас стоит в поле (его стираем на следующем шаге).
+        var currentText: String
     }
 
     init() {
@@ -78,25 +81,19 @@ final class TypingController {
 
     private func inputSourceChanged() {
         let current = InputSources.current()?.id
-        if let target = ownSwitchTarget, current == target {
-            ownSwitchTarget = nil
-            return
-        }
+        if let current, current == ownLayout { return }
         // Раскладку сменили не мы — набранное дальше будет в другой раскладке.
+        ownLayout = nil
         reset()
     }
 
-    // MARK: - Действия
+    // MARK: - Хоткей перевода
 
-    /// Хоткей перевода: первое нажатие — умный выбор (или следующая по кругу), дальше — по кругу.
-    /// Есть набранное — переводим его; нет — переводим выделение.
+    /// Есть набранное — переводим его; нет — выделение. Повторные нажатия — следующий шаг серии.
     func convert() {
         guard !SettingsStore.shared.frontmostAppExcludedFromConversion else { return }
-        if var current = session {
-            let from = current.current
-            current.index = (current.index + 1) % current.sequence.count
-            session = current
-            apply(current.content, from: from, to: current.current)
+        if session != nil {
+            nextStep()
             return
         }
 
@@ -107,15 +104,55 @@ final class TypingController {
             return
         }
 
-        let cycle = cycleIDs()
-        let content = Session.Content.typed(strokes)
-        let smartPick = settings.smartMode ? smartChoice(content, original: original, cycle: cycle) : nil
-        let sequence = ConversionOrder.sequence(cycle: cycle, original: original, first: smartPick)
-        session = Session(content: content, original: original, sequence: sequence, index: 0)
-        apply(content, from: original, to: sequence[0])
+        let tokens = strokes.map(TextToken.key)
+        guard let start = firstStep(tokens: tokens, original: original),
+              let oldText = render(tokens, in: original) else { return }
+        session = start.session
+        replace(oldText: oldText, with: start.session.currentText, switchTo: start.layout)
     }
 
-    /// Прямой хоткей раскладки: включить её и (по настройке) перевести в неё набранное.
+    /// Следующий шаг серии: весь фрагмент в следующую раскладку по кругу
+    /// (шаги, которые не меняют текст в поле, пропускаем).
+    private func nextStep() {
+        guard var current = session, !current.sequence.isEmpty else { return }
+        let oldText = current.currentText
+        for _ in current.sequence.indices {
+            current.step = (current.step + 1) % current.sequence.count
+            let target = current.sequence[current.step]
+            guard let newText = render(current.tokens, in: target) else { continue }
+            if newText == oldText { continue }
+            current.currentText = newText
+            session = current
+            replace(oldText: oldText, with: newText, switchTo: target)
+            return
+        }
+    }
+
+    /// Первый шаг серии: умный перевод по словам, иначе умный выбор / следующая по кругу для всего фрагмента.
+    private func firstStep(tokens: [TextToken], original: String) -> (session: Session, layout: String)? {
+        let cycle = cycleIDs()
+
+        if settings.smartMode, let fix = wordFix(tokens, original: original, cycle: cycle) {
+            if let uniform = fix.uniformTarget {
+                let sequence = ConversionOrder.sequence(cycle: cycle, original: original, first: uniform)
+                return (Session(tokens: tokens, original: original, sequence: sequence, step: 0, currentText: fix.text),
+                        uniform)
+            }
+            let sequence = ConversionOrder.sequence(cycle: cycle, original: original, first: fix.dominantTarget)
+            return (Session(tokens: tokens, original: original, sequence: sequence, step: -1, currentText: fix.text),
+                    fix.finalLayout)
+        }
+
+        let smartPick = settings.smartMode ? smartChoice(tokens, original: original, cycle: cycle) : nil
+        let sequence = ConversionOrder.sequence(cycle: cycle, original: original, first: smartPick)
+        guard let newText = render(tokens, in: sequence[0]) else { return nil }
+        return (Session(tokens: tokens, original: original, sequence: sequence, step: 0, currentText: newText),
+                sequence[0])
+    }
+
+    // MARK: - Прямые хоткеи
+
+    /// Прямой хоткей раскладки: включить её и (по настройке) перевести в неё набранное целиком.
     /// Выделение прямые хоткеи не трогают (кроме продолжения уже начатой серии).
     func selectLayout(id target: String) {
         guard let currentID = InputSources.current()?.id, currentID != target else { return }
@@ -127,22 +164,27 @@ final class TypingController {
             return
         }
 
-        let content: Session.Content
+        let tokens: [TextToken]
+        let original: String
+        let oldText: String
         if let session {
-            content = session.content
+            tokens = session.tokens
+            original = session.original
+            oldText = session.currentText
         } else {
             let strokes = buffer.fragment(settings.fragmentMode)
-            guard !strokes.isEmpty else {
+            guard !strokes.isEmpty, let rendered = render(strokes.map(TextToken.key), in: currentID) else {
                 switchLayout(to: target)
                 return
             }
-            content = .typed(strokes)
+            tokens = strokes.map(TextToken.key)
+            original = currentID
+            oldText = rendered
         }
-        let original = session?.original ?? currentID
-        let from = session?.current ?? currentID
+        guard let newText = render(tokens, in: target) else { return }
         let sequence = ConversionOrder.sequence(cycle: cycleIDs(), original: original, first: target)
-        session = Session(content: content, original: original, sequence: sequence, index: 0)
-        apply(content, from: from, to: target)
+        session = Session(tokens: tokens, original: original, sequence: sequence, step: 0, currentText: newText)
+        replace(oldText: oldText, with: newText, switchTo: target)
     }
 
     // MARK: - Выделение
@@ -166,48 +208,36 @@ final class TypingController {
                 text = copied
             }
 
-            let cycle = self.cycleIDs()
-            let candidates = cycle.compactMap(self.layout)
+            let candidates = self.cycleIDs().compactMap(self.layout)
             guard let source = LayoutDetector.sourceLayout(
                 of: text, among: candidates, preferred: InputSources.current()?.id
             ) else { return }
 
-            let content = Session.Content.selection(text: text, source: source.source.id)
-            let smartPick = self.settings.smartMode
-                ? self.smartChoice(content, original: source.source.id, cycle: cycle) : nil
-            let sequence = ConversionOrder.sequence(cycle: cycle, original: source.source.id, first: smartPick)
-            guard let newText = self.render(content, in: sequence[0]), newText != text else { return }
+            let tokens = source.tokens(for: text)
+            guard let start = self.firstStep(tokens: tokens, original: source.source.id),
+                  start.session.currentText != text else { return }
 
             // Ввод поверх выделения заменяет его.
-            await Self.insert(newText)
-            self.session = Session(content: content, original: source.source.id, sequence: sequence, index: 0)
-            self.switchLayout(to: sequence[0])
+            await Self.insert(start.session.currentText)
+            self.session = start.session
+            self.switchLayout(to: start.layout)
         }
     }
 
     // MARK: - Внутреннее
 
-    private func render(_ content: Session.Content, in layoutID: String) -> String? {
-        guard let target = layout(layoutID) else { return nil }
-        switch content {
-        case let .typed(strokes):
-            return target.render(strokes)
-        case let .selection(text, sourceID):
-            guard let source = layout(sourceID) else { return nil }
-            return LayoutConverter.convert(text, from: source, to: target)
-        }
+    private func render(_ tokens: [TextToken], in layoutID: String) -> String? {
+        layout(layoutID)?.render(tokens)
     }
 
-    /// Стирает фрагмент, как он выглядит в `from`, вводит его в виде `to` и включает `to`.
-    private func apply(_ content: Session.Content, from: String, to: String) {
-        guard from != to, let oldText = render(content, in: from), let newText = render(content, in: to) else {
-            if from != to { switchLayout(to: to) }
-            return
-        }
+    /// Стирает `oldText`, вводит `newText` и включает раскладку.
+    private func replace(oldText: String, with newText: String, switchTo layoutID: String) {
         enqueueAfterModifiersReleased { [weak self] in
-            EventPoster.backspace(count: oldText.count)
-            await Self.insert(newText)
-            self?.switchLayout(to: to)
+            if oldText != newText {
+                EventPoster.backspace(count: oldText.count)
+                await Self.insert(newText)
+            }
+            self?.switchLayout(to: layoutID)
         }
     }
 
@@ -221,9 +251,10 @@ final class TypingController {
     }
 
     private func switchLayout(to id: String) {
-        ownSwitchTarget = id
+        guard InputSources.current()?.id != id else { return }
+        ownLayout = id
         if !InputSources.select(id: id) {
-            ownSwitchTarget = nil
+            ownLayout = nil
             NSLog("Switchy: раскладка \(id) не найдена среди включённых")
             NSSound.beep()
         }
@@ -244,10 +275,18 @@ final class TypingController {
         }
     }
 
-    private func smartChoice(_ content: Session.Content, original: String, cycle: [String]) -> String? {
+    /// Умный перевод по словам (`nil` — ни одно слово не выглядит набранным не в той раскладке).
+    private func wordFix(_ tokens: [TextToken], original: String, cycle: [String]) -> WordFixer.Result? {
+        guard let originalLayout = layout(original) else { return nil }
+        let alternatives = cycle.filter { $0 != original }.compactMap(layout)
+        return WordFixer().fix(tokens, original: originalLayout, alternatives: alternatives)
+    }
+
+    /// Умный выбор раскладки для всего фрагмента.
+    private func smartChoice(_ tokens: [TextToken], original: String, cycle: [String]) -> String? {
         let candidates = cycle.filter { $0 != original }.compactMap { id -> SmartDetector.Candidate? in
-            guard let layout = layout(id), let text = render(content, in: id) else { return nil }
-            return SmartDetector.Candidate(layoutID: id, language: layout.source.language ?? "", text: text)
+            guard let layout = layout(id) else { return nil }
+            return SmartDetector.Candidate(layoutID: id, language: layout.source.language ?? "", text: layout.render(tokens))
         }
         return detector.pick(candidates)
     }

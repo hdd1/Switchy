@@ -15,8 +15,10 @@ A tiny macOS menu-bar utility. No dictionaries to maintain, no network, nothing 
 
 - **Fix what you just typed.** Typed `ghbdtn` instead of `привет`? Tap **Left Option** — the text is
   retyped in the right layout and the layout is switched.
-- **Smart mode.** The first tap picks the most likely layout using macOS built-in spell checking and
-  language recognition (on-device). Further taps cycle through the remaining layouts, the original one last.
+- **Smart mode.** The first tap fixes **only the words typed in the wrong layout** — `gjnjve xnj dev cthdth`
+  becomes `потому что dev сервер`, keeping `dev`. Words are checked against the macOS dictionary, on-device;
+  terms and typos are left alone. Further taps convert the whole fragment, cycling through layouts,
+  the original one last.
 - **Fix selected text.** Select text and tap the same key.
 - **Direct layout hotkeys.** One hotkey per layout (e.g. `⌃⌥1` → English, `⌃⌥2` → Russian, or F13/F14/F15).
   Optionally, they also convert just-typed text into that layout.
